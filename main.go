@@ -9,7 +9,10 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 
+	"github.com/calmh/mole/ansi"
 	"github.com/joho/godotenv"
 )
 
@@ -23,9 +26,16 @@ func main() {
 	password := os.Getenv("JIRA_PASS")
 	host := os.Getenv("JIRA_HOST")
 
-	updated := 72
+	weekday := time.Now().Weekday()
+	var updated int
+	if updated = 24; weekday.String() == "Monday" {
+		updated = 72
+		fmt.Println("Today is a", weekday, "so I will scan over the last", updated, "hours.")
+	}
 
+	fmt.Println()
 	fmt.Println("Issues updated in the past", updated, "hours:")
+	fmt.Println()
 
 	query1 := `
 		project = INF
@@ -36,7 +46,9 @@ func main() {
 
 	jiraQuery(username, password, host, query1)
 
-	fmt.Println("Issues stuck for the past", updated, "hours:")
+	fmt.Println()
+	fmt.Println("Issues stuck for the past", updated, "hours+:")
+	fmt.Println()
 
 	query2 := `
 		project = INF
@@ -74,20 +86,36 @@ func display(res *http.Response) {
 	err = json.Unmarshal(bodyText, &body)
 	err = json.Unmarshal(*body["issues"], &issues)
 
-	for _, issue := range issues {
+	if len(issues) == 0 {
+		return
+	}
+	for index, issue := range issues {
 		var fields, assignee, status rawJSON
 		var summary, assigneeName, key, statusName string
 
-		err = json.Unmarshal(*issue["fields"], &fields)
-		err = json.Unmarshal(*fields["assignee"], &assignee)
-		err = json.Unmarshal(*fields["status"], &status)
+		if issue["fields"] != nil {
+			err = json.Unmarshal(*issue["fields"], &fields)
+		}
+		if fields["assignee"] != nil {
+			err = json.Unmarshal(*fields["assignee"], &assignee)
+		}
+		if fields["status"] != nil {
+			err = json.Unmarshal(*fields["status"], &status)
+		}
+		if issue["key"] != nil {
+			err = json.Unmarshal(*issue["key"], &key)
+		}
+		if fields["summary"] != nil {
+			err = json.Unmarshal(*fields["summary"], &summary)
+		}
+		if status["name"] != nil {
+			err = json.Unmarshal(*status["name"], &statusName)
+		}
+		if assignee["displayName"] != nil {
+			err = json.Unmarshal(*assignee["displayName"], &assigneeName)
+		}
 
-		err = json.Unmarshal(*issue["key"], &key)
-		err = json.Unmarshal(*fields["summary"], &summary)
-		err = json.Unmarshal(*status["name"], &statusName)
-		err = json.Unmarshal(*assignee["displayName"], &assigneeName)
-
-		fmt.Println(key, summary, statusName, assigneeName)
+		fmt.Println(index+1, ansi.Bold("["+strings.Replace(key, "-", " ", 1)+"]"), summary, "/", ansi.Bold(assigneeName), "->", ansi.Bold(statusName))
 	}
 
 	if err != nil {
