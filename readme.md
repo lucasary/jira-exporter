@@ -4,7 +4,7 @@
 
 1- Get an API token for your account in order to programmatically access JIRA data: `https://id.atlassian.com/manage/api-tokens`
 
-2- Create `.env` file using `.env.default` with your username (email) and API token from step #1.
+2- Create `.env` file using `.env.default` with your company hostname, username (email) and API token from step #1.
 
 3- Install Go dependencies:
 
