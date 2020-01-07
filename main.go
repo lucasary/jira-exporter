@@ -28,9 +28,16 @@ func main() {
 
 	weekday := time.Now().Weekday()
 	var updated int
-	if updated = 24; weekday.String() == "Monday" {
+
+	if len(os.Args) == 2 {
+		updated, _ = strconv.Atoi(os.Args[1])
+		fmt.Println("Manual override: scanning over the last", updated, "hours.")
+	} else if weekday.String() == "Monday" {
 		updated = 72
 		fmt.Println("Today is a", weekday, "so I will scan over the last", updated, "hours.")
+	} else {
+		updated = 24
+		fmt.Println("Default:", updated, "hours")
 	}
 
 	fmt.Println()
