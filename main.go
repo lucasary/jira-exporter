@@ -59,7 +59,7 @@ func main() {
 	query2 := `
 		project = INF
 		AND ( status = "In Progress" OR status = "Review" )
-		AND not status changed AFTER ` + strconv.Itoa(updated) + `h
+		AND not status changed AFTER -` + strconv.Itoa(updated) + `h
 		ORDER BY status DESC, updated DESC
 	`
 
