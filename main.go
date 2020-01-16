@@ -47,6 +47,7 @@ func main() {
 	query1 := `
 		project = INF
 		AND status changed AFTER -` + strconv.Itoa(updated) + `h
+		AND Sprint is not EMPTY
 		ORDER BY status DESC, updated DESC
 	`
 
@@ -60,6 +61,7 @@ func main() {
 		project = INF
 		AND ( status = "In Progress" OR status = "Review" )
 		AND not status changed AFTER -` + strconv.Itoa(updated) + `h
+		AND Sprint is not EMPTY
 		ORDER BY status DESC, updated DESC
 	`
 
