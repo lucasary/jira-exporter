@@ -1,0 +1,29 @@
+service: jiranews
+app: jiranews
+org: artysidorenko
+
+frameworkVersion: '>=1.28.0 <2.0.0'
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: eu-west-2
+
+environment:
+  # Add env variables manually to keep them out of build logs
+  # JIRA_USER: ${env:JIRA_USER}
+  # JIRA_PASS: ${env:JIRA_PASS}
+  # JIRA_HOST: ${env:JIRA_HOST}
+  # SLACK_URL: ${env:SLACK_URL}
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+functions:
+  main:
+    handler: bin/main
+    events:
+      - schedule: cron(0 9 ? * MON-FRI *)

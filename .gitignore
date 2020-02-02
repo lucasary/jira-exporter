@@ -12,7 +12,13 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 # Sensitive variables
 .env
+
+# Serverless directories
+.serverless
+
+# golang output binary directory
+bin

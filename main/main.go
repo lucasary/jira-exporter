@@ -12,14 +12,27 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/calmh/mole/ansi"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	lambdaFunc := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+	if len(lambdaFunc) > 0 {
+		lambda.Start(start)
+	} else {
+		start()
+	}
+}
+
+func start() {
+	lambdaFunc := os.Getenv("AWS_LAMBDA_FUNCTION_NAME")
+	if len(lambdaFunc) == 0 {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	username := os.Getenv("JIRA_USER")

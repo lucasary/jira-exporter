@@ -17,7 +17,13 @@ go get github.com/joho/godotenv
 
 4- Install aha (converts terminal ansi output to html) if you want to maintain the bold formatting: `brew install aha` (Linux: `sudo apt install aha`)
 
-## Usage
+## Deploying to AWS Lambda via serverless
+
+For first time deploy (create cloud formation templates etc) `sls deploy`
+Subsequent deploy `sls deploy function -f main`
+NOTE: Add env variables manually, to keep them out of the build log
+
+## Manual Usage
 
 ### Basic usage (ouput results to terminal)
 
