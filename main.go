@@ -29,6 +29,8 @@ func main() {
 	weekday := time.Now().Weekday()
 	var updated int
 
+	var message string
+
 	if len(os.Args) == 2 {
 		updated, _ = strconv.Atoi(os.Args[1])
 		fmt.Println("Manual override: scanning over the last", updated, "hours.")
@@ -44,6 +46,12 @@ func main() {
 	fmt.Println("Issues updated in the past", updated, "hours:")
 	fmt.Println()
 
+	message += "\n\n"
+	message += strings.Join(
+		[]string{"Issues updated in the past", strconv.Itoa(updated), "hours:"},
+		" ")
+	message += "\n\n"
+
 	query1 := `
 		project = INF
 		AND status changed AFTER -` + strconv.Itoa(updated) + `h
@@ -51,11 +59,17 @@ func main() {
 		ORDER BY status DESC, updated DESC
 	`
 
-	jiraQuery(username, password, host, query1)
+	jiraQuery(username, password, host, query1, &message)
 
 	fmt.Println()
 	fmt.Println("Issues stuck for the past", updated, "hours+:")
 	fmt.Println()
+
+	message += "\n\n"
+	message += strings.Join(
+		[]string{"Issues stuck for the past", strconv.Itoa(updated), "hours+:"},
+		" ")
+	message += "\n\n"
 
 	query2 := `
 		project = INF
@@ -65,10 +79,23 @@ func main() {
 		ORDER BY status DESC, updated DESC
 	`
 
-	jiraQuery(username, password, host, query2)
+	jiraQuery(username, password, host, query2, &message)
+
+	slack(message)
+
 }
 
-func jiraQuery(username, password, host, query string) {
+func slack(message string) {
+	url2 := os.Getenv("SLACK_URL")
+	httpClient2 := &http.Client{}
+	payload := strings.NewReader("{\"text\": \"" + message + "\"}")
+	req2, err := http.NewRequest("POST", url2, payload)
+	res2, err := httpClient2.Do(req2)
+
+	_, _ = err, res2
+}
+
+func jiraQuery(username, password, host, query string, messagePtr *string) {
 	url := host + "?jql=" + url.QueryEscape(query)
 
 	httpClient := &http.Client{}
@@ -76,14 +103,14 @@ func jiraQuery(username, password, host, query string) {
 	req.SetBasicAuth(username, password)
 	res, err := httpClient.Do(req)
 
-	display(res)
+	display(res, messagePtr)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func display(res *http.Response) {
+func display(res *http.Response, messagePtr *string) {
 	bodyText, err := ioutil.ReadAll(res.Body)
 	// s := string(bodyText)
 
@@ -125,6 +152,12 @@ func display(res *http.Response) {
 		}
 
 		fmt.Println(index+1, ansi.Bold("["+strings.Replace(key, "-", " ", 1)+"]"), summary, "/", ansi.Bold(assigneeName), "->", ansi.Bold(statusName))
+
+		*messagePtr += strings.Join(
+			[]string{strconv.Itoa(index + 1), "*[" + strings.Replace(key, "-", " ", 1) + "]*", summary, "/", assigneeName, "->", statusName},
+			" ",
+		)
+		*messagePtr += "\n"
 	}
 
 	if err != nil {
