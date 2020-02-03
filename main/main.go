@@ -60,6 +60,12 @@ func start() {
 	fmt.Println()
 
 	message += "\n\n"
+	message += "Morning team,"
+	message += "\n\n"
+
+	message += getQuote()
+
+	message += "\n\n"
 	message += strings.Join(
 		[]string{"Issues updated in the past", strconv.Itoa(updated), "hours:"},
 		" ")
@@ -167,7 +173,7 @@ func display(res *http.Response, messagePtr *string) {
 		fmt.Println(index+1, ansi.Bold("["+strings.Replace(key, "-", " ", 1)+"]"), summary, "/", ansi.Bold(assigneeName), "->", ansi.Bold(statusName))
 
 		*messagePtr += strings.Join(
-			[]string{strconv.Itoa(index + 1), "*[" + strings.Replace(key, "-", " ", 1) + "]*", summary, "/", assigneeName, "->", statusName},
+			[]string{strconv.Itoa(index + 1), "*[" + strings.Replace(key, "-", " ", 1) + "]*", summary, "/", "*" + assigneeName + "*", "->", "*" + statusName + "*"},
 			" ",
 		)
 		*messagePtr += "\n"
@@ -176,4 +182,47 @@ func display(res *http.Response, messagePtr *string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getQuote() string {
+	quote := strings.Join([]string{"'", quoteQuery(), "'"}, "")
+	return quote
+}
+
+func quoteQuery() string {
+	url := os.Getenv("QUOTE_URL")
+
+	httpClient := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	res, err := httpClient.Do(req)
+
+	value := parseQuote(res)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return value
+}
+
+func parseQuote(res *http.Response) string {
+	bodyText, err := ioutil.ReadAll(res.Body)
+
+	type rawJSON = map[string]*json.RawMessage
+
+	var body, contents rawJSON
+	var quotes []rawJSON
+	var quote string
+
+	err = json.Unmarshal(bodyText, &body)
+	err = json.Unmarshal(*body["contents"], &contents)
+	err = json.Unmarshal(*contents["quotes"], &quotes)
+	_quote := quotes[0]
+	err = json.Unmarshal(*_quote["quote"], &quote)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return quote
 }
